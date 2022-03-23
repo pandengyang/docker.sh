@@ -9,9 +9,9 @@ docker.sh 是用 Shell 写的一个简易的 docker，支持以下功能：
 * 联合加载
 * 卷目录
 
-关于 docker.sh 的详细讲解，请关注微信公众号 KernelNewbies：
+关于 docker.sh 的详细讲解，请关注微信公众号 ScratchLab：
 
-![微信搜一搜 KernelNewbies](kernelnewbies.jpg)
+![微信搜一搜 ScratchLab](scratchlab.jpg)
 
 # Run
 

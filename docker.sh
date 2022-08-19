@@ -17,6 +17,7 @@ usage () {
 	echo "		-I string	image name"
 	echo "		-V string	volume"
 	echo "		-P string	program to run in container"
+	echo "		-n string	network"
 
 	return 0
 }
@@ -27,7 +28,7 @@ then
 	exit -1
 fi
 
-while getopts c:m:C:I:V:P: option
+while getopts c:m:C:I:V:P:n: option
 do
 	case "$option"
 	in
@@ -37,6 +38,7 @@ do
 		I) image=$OPTARG;;
 		V) volume=$OPTARG;;
 		P) program=$OPTARG;;
+		n) network=$OPTARG;;
 		\?) usage
 		    exit -2;;
 	esac
@@ -47,6 +49,47 @@ export memory=$memory
 export container=$container
 export image=$image
 export volume=$volume
+export network=$network
 export program=$program
 
-unshare --uts --mount --pid --fork ./container.sh
+if test "$network" = host; then
+	unshare --uts --mount --pid --fork ./container.sh
+
+elif test "$network" = none; then
+	if [ -e /var/run/netns/$container ]; then
+		echo Abort: netns $container exists
+		exit -1
+	fi
+
+	touch /var/run/netns/$container
+	unshare --uts --mount --pid --net=/var/run/netns/$container --fork ./container.sh
+
+elif test "$network" = bridge; then
+	if [ -e /var/run/netns/$container ]; then
+		echo Abort: netns $container exists
+		exit -1
+	fi
+
+	touch /var/run/netns/$container
+
+	ip link add veth1-$container type veth peer name veth2-$container
+	ip link set dev veth2-$container master dockersh0
+	ip link set dev veth2-$container up
+
+	./set_netns.sh veth1-$container $container &
+
+	addr=unknown
+	for i in {2..254}
+	do
+		ping -c 3 172.31.0.$i;
+
+		if test $? != 0; then
+			export addr=172.31.0.$i
+
+			break
+		fi
+	done
+
+	unshare --uts --mount --pid --net=/var/run/netns/$container --fork ./container.sh
+
+fi

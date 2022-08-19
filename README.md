@@ -45,6 +45,5 @@ cd images
 sudo debootstrap --arch amd64 xenial ./ubuntu1604
 
 # 运行容器
-sudo ./docker.sh -c run -m 100M -C dreamland -I ubuntu1604 -V data1 -P /bin/bash
-sudo ./docker.sh -c run -m 100M -C dreamland -I ubuntu1604 -V data1 -P "cat /etc/issue"
+sudo ./docker.sh -c run -m 100M -C dreamland -I ubuntu1604 -V data1 -P /bin/bash -n host -n none
 ```
